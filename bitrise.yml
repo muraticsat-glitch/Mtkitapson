@@ -1,0 +1,37 @@
+format_version: '13'
+default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
+project_type: react-native
+workflows:
+  primary:
+    description: mtkitap Expo Android APK
+    steps:
+    - git-clone@8: {}
+    - npm@1:
+        inputs:
+        - command: install
+    - script@1:
+        title: Generate Android project from Expo
+        inputs:
+        - content: |
+            #!/usr/bin/env bash
+            set -ex
+            CI=1 npx expo prebuild --platform android
+    - script@1:
+        title: Build debug APK
+        inputs:
+        - content: |
+            #!/usr/bin/env bash
+            set -ex
+            cd android
+            chmod +x gradlew
+            ./gradlew assembleDebug
+    - deploy-to-bitrise-io@2:
+        inputs:
+        - deploy_path: android/app/build/outputs/apk/debug/app-debug.apk
+meta:
+  bitrise.io:
+    stack: linux-docker-android-22.04
+    machine_type_id: standard
+trigger_map:
+- push_branch: main
+  workflow: primary
